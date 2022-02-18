@@ -1,6 +1,6 @@
 # Did it spill?
 Computes hashes of you data to determine if you have samples spilled over from train set to test set. Function also returns duplicates
-inside from inside the same loader
+ from inside the same loader.
 ```python
 from did_it_spill import check_spill
 
