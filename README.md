@@ -7,7 +7,7 @@ from did_it_spill import check_spill
 dupes_loader_1, dupes_loader_2, test_spills = check_spill(train_loader, test_loader)
 
 print(f"Loader 1 had {len(dupes_loader_1)} duplicates")
-print(f"Loader 1 had {len(dupes_loader_2)} duplicates")
+print(f"Loader 2 had {len(dupes_loader_2)} duplicates")
 print(f"Loader 2 had {len(test_spills)} spills")
 ```
 
