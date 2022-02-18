@@ -1,4 +1,6 @@
 # Did it spill?
+Currently only for PyTorch  
+
 Computes hashes of you data to determine if you have samples spilled over from train set to test set. Function also returns duplicates
  from inside the same loader.
 ```python
