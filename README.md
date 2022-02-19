@@ -10,7 +10,7 @@ dupes_loader_1, dupes_loader_2, test_spills = check_spill(train_loader, test_loa
 print(f"Loader 1 had {len(dupes_loader_1)} duplicates")
 print(f"Loader 2 had {len(dupes_loader_2)} duplicates")
 
-print(f"You have {len(test_spills)} spills in your test set")
+print(f"You have {len(test_spills)} spills in your test set!")
 ```
 The library computes hashes of your data to determine if you have samples spilled over from train set to test set. Function also returns duplicates
  from inside the same loader.
@@ -28,7 +28,8 @@ pip install did-it-spill
 ```
 ## Debugging spills
 
-Dupes_loader_1 and Dupes_loader_2 are dictionaries with the hash as the key and a list of indexes as value.  
+Example output of test_spills: ```[(32247, 187)...]```  
+Here the first spill was found in the training set at index 32247 and at index 187 in the test set (assuming loader 1 was training loader).
 
-test_spills is a list of tuples where index 0 is the index in first loader and index 1 is index in loader 2
-
+Example output of dupes: ```{919608913001251003: [202, 203, 204], ...}```
+Here the sample corresponding to the hash "919608913001251003" was found 3 times: at indexes 202, 203 and 204.
