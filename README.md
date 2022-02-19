@@ -31,5 +31,5 @@ pip install did-it-spill
 Example output of test_spills: ```[(32247, 187)...]```  
 Here the first spill was found in the training set at index 32247 and at index 187 in the test set (assuming loader 1 was training loader).
 
-Example output of dupes: ```{919608913001251003: [202, 203, 204], ...}```
-Here the sample corresponding to the hash "919608913001251003" was found 3 times: at indexes 202, 203 and 204.
+Example output of dupes: ```{867fe5da1f164ecc5159d99fb46cc893ea1a3d44: [202, 203, 204], ...}```
+Here the sample corresponding to the hash "867fe5da1f164ecc5159d99fb46cc893ea1a3d44" was found 3 times: at indexes 202, 203 and 204.
