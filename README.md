@@ -26,10 +26,31 @@ check_spill_assert(train_loader, test_loader)
 ```
 pip install did-it-spill
 ```
+## Outputs
+**test_spills** = ```{72d2e3e611344c4a794b8e0e4ad520b1c36f918d: [32247, 187], ...}```  
+index 0 = spill found in first loader at this index.  
+index 1 = spill found in second loader at this index.  
+Always len = 2
+
+**dupes_loader_1 and 2** = ```{867fe5da1f164ecc5159d99fb46cc893ea1a3d44: [202, 203, 204], ...}```  
+Duplicates found at these indexes  
+Varying length
+
 ## Debugging spills
+The unthinkable happen. So what should I do now?
+```python
+for _, v in test_spills.items():
+    # Lets get both of the samples and double check that they really are the same
+    index_train_set = v[0]
+    index_test_set = v[1]
 
-Example output of test_spills: ```[(32247, 187)...]```  
-Here the first spill was found in the training set at index 32247 and at index 187 in the test set (assuming loader 1 was training loader).
-
-Example output of dupes: ```{867fe5da1f164ecc5159d99fb46cc893ea1a3d44: [202, 203, 204], ...}```
-Here the sample corresponding to the hash "867fe5da1f164ecc5159d99fb46cc893ea1a3d44" was found 3 times: at indexes 202, 203 and 204.
+    # Get the data from dataset
+    spilled_sample_train = train_dataset.__getitem__(index_train_set)[0]
+    spilled_sample_test = test_dataset.__getitem__(index_test_set)[0]
+    
+    # This should always be true
+    print(torch.equal(spilled_sample_train, spilled_sample_test))
+    
+    # From here on its up to you, maybe plot the data?
+    print(spilled_sample_train)
+```
