@@ -9,7 +9,8 @@ spills = check_spill(train_loader, test_loader)
 
 print(f"You have {len(spills)} spills in your test set!")
 ```
-The library computes hashes of your data to determine if you have samples spilled over from your train set to test set. 
+The library computes hashes of your data to determine if you have samples spilled over from your train set to test set.
+Currently only for PyTorch.
 
 ## Installation
 ```
@@ -28,7 +29,8 @@ The first leak was found at index 1244 in loader 1 and at index 78 in loader 2.
 
 
 ## Debugging spills
-The unthinkable happen. So what should I do now?
+The unthinkable happen. So what should I do now?  
+Make sure you have **shuffle = False** for correct indexes.
 ```python
 for spill in spills:
     # Lets get both of the samples and double check that they really are the same
