@@ -47,3 +47,7 @@ for spill in spills:
     # From here on its up to you, maybe plot the data?
     print(spilled_sample_train)
 ```
+
+## Run the tests
+
+Run the test with `pytest` from the root directory

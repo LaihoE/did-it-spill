@@ -6,6 +6,12 @@ from torch.utils.data import DataLoader
 
 
 def check_spill(train_dataloader: DataLoader, test_dataloader: DataLoader) -> List[Tuple[int, int]]:
+    """
+    Check train- and test-dataloader for mixed samples
+    :param train_dataloader: holds train-data
+    :param test_dataloader: holds test-data
+    :return: a list consisting of index-tuples which indicate the position of the mixed samples
+    """
     hasd_1 = __make_hash_dict_from(train_dataloader)
     hasd_2 = __make_hash_dict_from(test_dataloader)
     test_spills = __get_overlap_of_hashdicts(hasd_1, hasd_2)
