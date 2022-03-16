@@ -1,32 +1,31 @@
+from typing import List, Tuple, Dict
 import numpy as np
 import hashlib
+from torch.utils.data import DataLoader
 
 
-def check_spill(loader1, loader2):
-    hash_loader1, hash_loader2 = [], []     # All hashes
-    hasd_1, hasd_2 = {}, {}     # key=hash, val=index
+def __get_hash_dict(loader: DataLoader) -> Dict[str, int]:
+    index = 0
+    hash_dict = {}
+    # For each batch
+    for data, _ in loader:
+        data = data.detach().numpy()
+        # For each sample in the batch
+        for sample in range(data.shape[0]):
+            # Hash the current sample
+            this_hash = hashlib.sha1(data[sample].view(np.uint8)).hexdigest()
+            # Key = hash of our sample, val = where in the dataset that hash was
+            hash_dict[this_hash] = index
+            index += 1
+    return hash_dict
+
+
+def check_spill(loader1: DataLoader, loader2: DataLoader) -> List[Tuple[int, int]]:
     test_spills = []
-    for loader_inx, loader in enumerate([loader1, loader2]):
-        # Index in loader (What index in the dataset we are at)
-        index = 0
-        for data, _ in loader:
-            # Make sure the data is the correct type (maybe unnecessary), causes problems without this
-            data = data.detach().numpy()
-            for i in range(data.shape[0]):
-                d = data[i].view(np.uint8)
-                this_hash = hashlib.sha1(d).hexdigest()
-                if loader_inx == 0:
-                    hash_loader1.append(this_hash)
-                    hasd_1[this_hash] = index
-                else:
-                    hash_loader2.append(this_hash)
-                    hasd_2[this_hash] = index
-                index += 1
-    # Unique hashes
-    set_hash_loader1 = set(hash_loader1)
-    set_hash_loader2 = set(hash_loader2)
+    hashes_loader1 = __get_hash_dict(loader1)
+    hashes_loader2 = __get_hash_dict(loader2)
     # find spilled samples
-    for hsh in set_hash_loader1:
-        if hsh in set_hash_loader2:
-            test_spills.append((hasd_1[hsh], hasd_2[hsh]))
+    for hsh in hashes_loader1.keys():
+        if hsh in hashes_loader2.keys():
+            test_spills.append((hashes_loader1[hsh], hashes_loader2[hsh]))
     return test_spills
