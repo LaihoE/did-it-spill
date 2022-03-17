@@ -11,9 +11,9 @@ def __get_hash_dict(loader: DataLoader) -> Dict[str, int]:
     for data, _ in loader:
         data = data.detach().numpy()
         # For each sample in the batch
-        for sample in range(data.shape[0]):
+        for sample in data:
             # Hash the current sample
-            this_hash = hashlib.sha1(data[sample].view(np.uint8)).hexdigest()
+            this_hash = hashlib.sha1(sample).hexdigest()
             # Key = hash of our sample, val = where in the dataset that hash was
             hash_dict[this_hash] = index
             index += 1
