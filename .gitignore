@@ -1,0 +1,4 @@
+.idea
+__pycache__
+.pytest_cache
+did_it_spill/tests/data/
