@@ -1,7 +1,8 @@
-import unittest
 from torch.utils.data import DataLoader, Dataset
-import sys
 from pathlib import Path
+import unittest
+import sys
+import torchvision
 
 #### needed for testing #####
 this_path = str(Path(__file__).parent.parent.parent)
@@ -56,6 +57,10 @@ class CharacterDatasetForTesting(Dataset):
 
 class TestMain(unittest.TestCase):
 
+    def setUp(self) -> None:
+        self.cifar10_train = torchvision.datasets.CIFAR10(root="./data", train=True, download=True)
+        self.cifar10_test = torchvision.datasets.CIFAR10(root="./data", train=False, download=False)
+
     def test_overlap_with_batchsize_1(self):
         self.__test_overlap()
 
@@ -78,6 +83,16 @@ class TestMain(unittest.TestCase):
         # raised since the dataloader will not pack string or chars into a tensor
         self.assertRaises(AttributeError, did_it_spill.check_spill, train_dataloader, test_dataloader)
 
+    def test_cifar10_spills(self):
+        train_dataloader = self.__create_dataloader(self.cifar10_train)
+        test_dataloader = self.__create_dataloader(self.cifar10_test)
+
+        spills = did_it_spill.check_spill(train_dataloader, test_dataloader)
+
+        expected_indexes_in_overlap = set()
+
+        self.__check_expected_values(spills, expected_indexes_in_overlap)
+
     def __test_overlap(self, batch_size=1, shuffle=False):
         train_dataset = IntegerDatasetForTesting(start=0, end=10)
         test_dataset = IntegerDatasetForTesting(start=0, end=5)
@@ -85,11 +100,10 @@ class TestMain(unittest.TestCase):
         train_dataloader = self.__create_dataloader(train_dataset, batch_size=batch_size, shuffle=shuffle)
         test_dataloader = self.__create_dataloader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
-        expected_length_of_overlap = 5
         expected_indexes_in_overlap = {0, 1, 2, 3, 4}
         spills = did_it_spill.check_spill(train_dataloader, test_dataloader)
 
-        self.__check_expected_values(spills, expected_length_of_overlap, expected_indexes_in_overlap)
+        self.__check_expected_values(spills, expected_indexes_in_overlap)
 
     def __test_no_overlap(self, batch_size=1, shuffle=False):
         train_dataset = IntegerDatasetForTesting(start=0, end=5)
@@ -98,18 +112,16 @@ class TestMain(unittest.TestCase):
         train_dataloader = self.__create_dataloader(train_dataset, batch_size=batch_size, shuffle=shuffle)
         test_dataloader = self.__create_dataloader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
-        expected_length_of_overlap = 0
         expected_indexes_in_overlap = set()
         spills = did_it_spill.check_spill(train_dataloader, test_dataloader)
 
-        self.__check_expected_values(spills, expected_length_of_overlap, expected_indexes_in_overlap)
+        self.__check_expected_values(spills, expected_indexes_in_overlap)
 
     @staticmethod
     def __create_dataloader(dataset, batch_size=1, shuffle=False):
         return DataLoader(dataset=dataset, shuffle=shuffle, batch_size=batch_size)
 
-    def __check_expected_values(self, spills, expected_length_of_overlap, expected_indexes_in_overlap):
-        self.assertEqual(expected_length_of_overlap, len(spills))
+    def __check_expected_values(self, spills, expected_indexes_in_overlap):
         seen = dict()
         for spill in spills:
             self.assertTrue(spill[0] in expected_indexes_in_overlap)
