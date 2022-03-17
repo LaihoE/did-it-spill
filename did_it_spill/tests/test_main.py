@@ -3,6 +3,7 @@ from pathlib import Path
 import unittest
 import sys
 import torchvision
+import torchvision.transforms as transforms
 
 #### needed for testing #####
 this_path = str(Path(__file__).parent.parent.parent)
@@ -57,9 +58,13 @@ class CharacterDatasetForTesting(Dataset):
 
 class TestMain(unittest.TestCase):
 
-    def setUp(self) -> None:
-        self.cifar10_train = torchvision.datasets.CIFAR10(root="./data", train=True, download=True)
-        self.cifar10_test = torchvision.datasets.CIFAR10(root="./data", train=False, download=False)
+    @classmethod
+    def setUpClass(cls) -> None:
+        super(TestMain, cls).setUpClass()
+        # taken from pytorch tutorial for classification: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+        transform = transforms.ToTensor()
+        cls.cifar10_train = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+        cls.cifar10_test = torchvision.datasets.CIFAR10(root="./data", train=False, download=False, transform=transform)
 
     def test_overlap_with_batchsize_1(self):
         self.__test_overlap()
@@ -83,13 +88,23 @@ class TestMain(unittest.TestCase):
         # raised since the dataloader will not pack string or chars into a tensor
         self.assertRaises(AttributeError, did_it_spill.check_spill, train_dataloader, test_dataloader)
 
-    def test_cifar10_spills(self):
+    def test_cifar10_no_spills(self):
         train_dataloader = self.__create_dataloader(self.cifar10_train)
         test_dataloader = self.__create_dataloader(self.cifar10_test)
 
         spills = did_it_spill.check_spill(train_dataloader, test_dataloader)
 
         expected_indexes_in_overlap = set()
+
+        self.__check_expected_values(spills, expected_indexes_in_overlap)
+
+    def test_cifar10_full_spills(self):
+        test_dataloader = self.__create_dataloader(self.cifar10_test)
+
+        spills = did_it_spill.check_spill(test_dataloader, test_dataloader)
+
+        #since we compare the identical dataloaders all entries should overlap
+        expected_indexes_in_overlap = set(range(len(test_dataloader)))
 
         self.__check_expected_values(spills, expected_indexes_in_overlap)
 
