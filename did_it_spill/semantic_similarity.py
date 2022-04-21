@@ -57,20 +57,52 @@ class testdataset(Dataset):
         return self.n_samples
 
 
-def generate_embeddings(loader, model):
+def generate_embeddings(loader, model=None):
+    """
+    Generates embeddings from images by simply doing a forward pass.
+    This seems to work unreasonably well.
+    The embedding is simply the last layer of the model. By default using
+    models trained on imagenet this will be dim=1000. Notice that using
+    normal CNN trained on image classification might not be SOTA for
+    this, but it seems to work darn well!
+
+    By default it uses a resnet18, but the user can also specify a custom model.
+    Function will use the output of specified custom model as the embedding.
+
+    This is also the function that takes over 99 % of the time.
+    :param loader:
+    :param model:
+    :return:
+    """
+    if model is None:
+        model = torchvision.models.resnet18(pretrained=True).to(device)
+    model.eval()
     # returns embeddings in shape (n, 1000)
     embeddings = []
     for data in loader:
-        print(data.shape)
-        pred2 = model(data.to(device))
-        embeddings.append(pred2.flatten(start_dim=1).detach().cpu())
+        embedding = model(data.to(device))
+        embeddings.append(embedding.flatten(start_dim=1).detach().cpu())
     return torch.cat(embeddings)
 
 
 def knn(emb_train, emb_test, K, batch_size, threshold=30, print_dupes=False):
+    """
+    KNN that supports GPU. VERY fast.
+
+    :param emb_train:
+    :param emb_test:
+    :param K:
+    :param batch_size:
+    :param threshold:
+    :param print_dupes:
+    :return:
+    """
     for binx in range(math.ceil(len(emb_test) / batch_size)):
+        # Slice the test set
         batch_test_emb = emb_test[binx * batch_size: binx * batch_size + batch_size, :]
+        # Compute dist between test embeddings and train embeddings
         D = torch.cdist(batch_test_emb, emb_train)
+        # Get distances and indexes to top k closest vectors
         dist, idx = D.topk(k=K, dim=-1, largest=False)
 
         if print_dupes:
@@ -88,7 +120,22 @@ def knn(emb_train, emb_test, K, batch_size, threshold=30, print_dupes=False):
             return duplicates
 
 
-def semantic_similarity(train_loader, test_loader, K, batch_size, model, print_dupes):
+def semantic_similarity(train_loader, test_loader, K, batch_size, print_dupes, model=None):
+    """
+    Returns indexes for images that are very similar or identical.
+
+    Generates embeddings by doing a forward pass with a pretrained resnet18 (by default).
+    Alternatively you can specify a custom model for generating embeddings.
+    The embeddings are then compared with KNN to find similar images.
+
+    :param train_loader:
+    :param test_loader:
+    :param K:
+    :param batch_size:
+    :param model:
+    :param print_dupes:
+    :return:
+    """
     emb_train = generate_embeddings(train_loader, model)
     emb_test = generate_embeddings(test_loader, model)
     duplicates = knn(emb_train, emb_test, K, batch_size, print_dupes)
@@ -103,7 +150,8 @@ def get_spilled_samples(spills, train_dataset):
     general, not just work with datasets that return: (data, label),
     but also for datasets with (data, label, third_thing) or similar.
 
-    Notice that the function only takes in one dataset.
+    Notice that the function only takes in one dataset but spill
+    is a tuple with indexes for two datasets (the other is ignored).
     :param spills:
     :param train_dataset:
     :return: spilled_samples:
