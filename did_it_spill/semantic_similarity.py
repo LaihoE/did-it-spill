@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import os
+import glob
 import torchvision
 from PIL import Image
 import torch.nn.functional as F
@@ -140,6 +141,65 @@ def semantic_similarity(train_loader, test_loader, K, batch_size, print_dupes, m
     emb_test = generate_embeddings(test_loader, model)
     duplicates = knn(emb_train, emb_test, K, batch_size, print_dupes)
     return duplicates
+
+class Imagedataset(Dataset):
+    def __init__(self, dir, recursive=False):
+
+        if recursive:
+            self.files = []
+            for filename in glob.iglob(f'{dir}/**', recursive=True):
+                if os.path.isfile(filename):
+                    self.files.append(filename)
+        else:
+            self.files = os.listdir(dir)
+            self.files = [f"{folder}{f}" for f in self.files]
+        self.n_samples = len(self.files)
+
+        self.transforms = torch.nn.Sequential(
+            T.Resize((64, 64)),
+            T.ConvertImageDtype(torch.float),
+            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        )
+
+    def __getitem__(self, index):
+        raw_image = read_image(self.files[index])
+        transformed_image = self.transforms(raw_image)
+        return transformed_image
+
+    def __len__(self):
+        return self.n_samples
+
+
+def dupes_from_folder(dir, K, batch_size, recursive=False, model=None, num_workers=0, print_dupes=False):
+    """
+    Returns file paths of images that are near duplicates or identical.
+    Example output [(img1.jpg, img2.jpg) ...]
+
+    :param dir:
+    :param K:
+    :param batch_size:
+    :param recursive:
+    :param model:
+    :param num_workers:
+    :param print_dupes:
+    :return:
+    """
+    duplicate_files = []
+    dataset = Imagedataset(dir, recursive)
+    files = dataset.files
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                              shuffle=False, num_workers=num_workers)
+
+    embeddings = generate_embeddings(data_loader, model)
+    duplicates = knn(embeddings, embeddings, K, batch_size)
+    for dupe in duplicates:
+        if dupe[0] != dupe[1]:
+            image1 = files[dupe[0]]
+            image2 = files[dupe[1]]
+            if print_dupes:
+                print(image1, "-->", image2)
+            duplicate_files.append((image1, image2))
+    return duplicate_files
 
 
 def get_spilled_samples(spills, train_dataset):
