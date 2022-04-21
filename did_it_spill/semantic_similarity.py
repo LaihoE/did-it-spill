@@ -92,8 +92,27 @@ def semantic_similarity(train_loader, test_loader, K, batch_size, model, print_d
     emb_train = generate_embeddings(train_loader, model)
     emb_test = generate_embeddings(test_loader, model)
     duplicates = knn(emb_train, emb_test, K, batch_size, print_dupes)
-    print(duplicates)
     return duplicates
+
+
+def get_spilled_samples(spills, train_dataset):
+    """
+    Returns the actual data that was spilled. Notice that it
+    returns everything that the __getitem__ returns ie. data and labels
+    and potentially other stuff. This is done to be more
+    general, not just work with datasets that return: (data, label),
+    but also for datasets with (data, label, third_thing) or similar.
+
+    Notice that the function only takes in one dataset.
+    :param spills:
+    :param train_dataset:
+    :return: spilled_samples:
+    """
+    spilled_samples = []
+    for spill in spills:
+        spill_inx = spill[0]
+        spilled_samples.append(train_dataset.__getitem__(spill_inx))
+    return spilled_samples
 
 
 if __name__ == '__main__':
@@ -115,9 +134,7 @@ if __name__ == '__main__':
     folder = '/mnt/f/amp/a/'
     files = os.listdir(folder)
     files = [f"{folder}{f}" for f in files]
-    simil = []
-    print(files[14640])
-    print(files[4500])
+
 
     before = time.time()
     semantic_similarity(trainloader,
