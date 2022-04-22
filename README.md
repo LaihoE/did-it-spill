@@ -62,7 +62,8 @@ There are 2 main functions for this:
 >>> similar_images
 [("img48.jpg", "img21.jpg") ...]
 ```
-
+K stands for the max amount of duplicate images returned per image. "how many neighbours KNN will return".
+Tradeoff between speed and number of images.
 
 
 Both functions do similar things, and only have slightly different inputs and outputs. duplicate_images() works very similarly to
