@@ -40,7 +40,7 @@ spilled_data = get_spilled_samples(spills, train_dataset)
 Notice that the spilled_data includes everything that the get_item would return ie. data and labels and potentially more. 
 This is mainly done to support any type of dataset, but it might also be useful to have labels to find the underlying problem.
 
-###Example output: 
+### Example output: 
 ```python
 [(data, label) ... ]
 ```
