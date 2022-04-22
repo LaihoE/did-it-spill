@@ -29,21 +29,44 @@ The first leak was found at index 1244 in loader 1 and at index 78 in loader 2.
 
 
 ## Debugging spills
-The unthinkable happen. So what should I do now?  
-Make sure you have **shuffle = False** for correct indexes.
-```python
-for spill in spills:
-    # Lets get both of the samples and double check that they really are the same
-    index_train_set = spill[0]
-    index_test_set = spill[1]
+**Make sure you have shuffle = False for correct indexes.**  
+get_spilled_samples returns the actual data that was spilled.
 
-    # Get the data from dataset
-    spilled_sample_train = train_dataset.__getitem__(index_train_set)[0]
-    spilled_sample_test = test_dataset.__getitem__(index_test_set)[0]
-    
-    # This should always be true
-    print(torch.equal(spilled_sample_train, spilled_sample_test))
-    
-    # From here on its up to you, maybe plot the data?
-    print(spilled_sample_train)
+```python
+spills = check_spill(train_loader, test_loader)
+# Notice that we are passing the TRAIN DATASET (or the same dataset that the first loader is using in above func)
+spilled_data = get_spilled_samples(spills, train_dataset)
 ```
+Notice that the spilled_data includes everything that the get_item would return ie. data and labels and potentially more. 
+This is mainly done to support any type of dataset, but it might also be useful to have labels to find the underlying problem.
+
+###Example output: 
+```python
+[(data, label) ... ]
+```
+
+# Semantic similarity
+Now also supports checking for similar or identical images.  
+There are 2 main functions for this:  
+
+
+### duplicate_images()
+```python
+>>> spills = duplicate_images(train_loader, test_loader, K, batch_size)
+>>> spills
+[(1244, 78)...(8774, 5431)]
+```
+### duplicate_images_dir()
+```python
+>>> similar_images = duplicate_images_dir(dir, K, batch_size, recursive=True)
+>>> similar_images
+[("img48.jpg", "img21.jpg") ...]
+```
+
+
+
+Both functions do similar things, and only have slightly different inputs and outputs. duplicate_images() works very similarly to
+the main check_spill function by taking in both loaders and returns the indexes of spills (too similar images).  
+
+duplicate_images_dir() on the other hand operates completely with
+files by taking in a directory and returns the images that are similar. This one might be easier for debugging.
