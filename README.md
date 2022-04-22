@@ -1,4 +1,6 @@
 # Did it spill?
+News! added support for semantic similarity.
+
 Did you manage to spill samples from your train set to your test set?  
 
 
