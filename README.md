@@ -58,7 +58,7 @@ There are 2 main functions for this:
 ```
 ### duplicate_images_dir()
 ```python
->>> similar_images = duplicate_images_dir(dir, K, batch_size, recursive=True)
+>>> similar_images = duplicate_images_dir(dir, K, batch_size)
 >>> similar_images
 [("img48.jpg", "img21.jpg") ...]
 ```
