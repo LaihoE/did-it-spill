@@ -55,7 +55,7 @@ def __generate_embeddings(loader: DataLoader, model=None):
     # returns embeddings in shape (n, 1000)
     embeddings = []
     for data in loader:
-        embedding = model(data.to(device))
+        embedding = model(data[0].to(device))
         embeddings.append(embedding.flatten(start_dim=1).detach().cpu())
     return torch.cat(embeddings)
 
